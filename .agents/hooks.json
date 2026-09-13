@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .agents/hooks-scripts/block_deletion.py",
+            "command": "python worldforge/.agents/hooks-scripts/block_deletion.py",
             "timeout": 10
           }
         ]
