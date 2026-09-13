@@ -1,7 +1,7 @@
 ## 1. Modelos de Dados JSON e Persistência Local
 
-- [ ] 1.1 Definir e implementar os esquemas e modelos Python (dataclasses/Pydantic) para `Character`, `Location`, `Faction` e `Relationship` e verificar validação com testes unitários
-- [ ] 1.2 Implementar a hierarquia de classes e arquivos para carregar, salvar e manter a integridade referencial em arquivos JSON e verificar salvamento/carregamento correto
+- [x] 1.1 Definir e implementar os esquemas e modelos Python (dataclasses/Pydantic) para `Character`, `Location`, `Faction` e `Relationship` e verificar validação com testes unitários
+- [x] 1.2 Implementar a hierarquia de classes e arquivos para carregar, salvar e manter a integridade referencial em arquivos JSON e verificar salvamento/carregamento correto
 
 ## 2. Interface Gráfica e Navegação PyQt
 
