@@ -2,6 +2,8 @@
 
 - [x] 1.1 Definir e implementar os esquemas e modelos Python (dataclasses/Pydantic) para `Character`, `Location`, `Faction` e `Relationship` e verificar validação com testes unitários
 - [x] 1.2 Implementar a hierarquia de classes e arquivos para carregar, salvar e manter a integridade referencial em arquivos JSON e verificar salvamento/carregamento correto
+- [x] 1.3 Listar relacionamentos em formato de arvore
+- [x] 1.4 Exportar lista de relacionamentos em formato de markdown (ordem alfabetica) e agrupado por entidades (personagens, facções, locais)
 
 ## 2. Interface Gráfica e Navegação PyQt
 

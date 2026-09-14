@@ -127,6 +127,44 @@ class TestWorldRepository(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.repo.add_relationship(rel)
 
+    def test_get_relationship_tree_empty(self):
+        # Repositório sem entidades/relacionamentos deve retornar uma árvore vazia
+        tree = self.repo.get_relationship_tree()
+        self.assertEqual(tree, {"nodes": [], "edges": []})
+
+    def test_get_relationship_tree_with_nodes(self):
+        # Repositório com entidades e relacionamentos deve retornar os nós e arestas da árvore
+        char = Character(name="Eldrin", summary="Mago")
+        fac = Faction(name="Ordem Arcana", faction_type="guild")
+        self.repo.add_character(char)
+        self.repo.add_faction(fac)
+
+        rel = Relationship(
+            source_id=char.id,
+            source_type=EntityType.CHARACTER,
+            target_id=fac.id,
+            target_type=EntityType.FACTION,
+            relation_type=RelationType.MEMBER_OF.value,
+        )
+        self.repo.add_relationship(rel)
+
+        tree = self.repo.get_relationship_tree()
+        self.assertIn("nodes", tree)
+        self.assertIn("edges", tree)
+
+        # Verificar presença dos nós das entidades
+        node_ids = [n["id"] for n in tree["nodes"]]
+        self.assertIn(char.id, node_ids)
+        self.assertIn(fac.id, node_ids)
+
+        # Verificar presença da aresta do relacionamento
+        self.assertEqual(len(tree["edges"]), 1)
+        edge = tree["edges"][0]
+        self.assertEqual(edge["source_id"], char.id)
+        self.assertEqual(edge["target_id"], fac.id)
+        self.assertEqual(edge["relation_type"], RelationType.MEMBER_OF.value)
+
 
 if __name__ == "__main__":
     unittest.main()
+

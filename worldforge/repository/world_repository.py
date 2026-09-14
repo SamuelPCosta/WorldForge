@@ -293,6 +293,111 @@ class WorldRepository:
             loc for loc in self.location_repo.get_all() if loc.id in locations
         ]
 
+    def get_relationship_tree(self) -> dict:
+        """Retorna as entidades e relacionamentos estruturados como nós e arestas de uma árvore de conexões."""
+        nodes = []
+        for entity in self.get_all_entities():
+            entity_dict = entity.to_dict()
+            nodes.append({
+                "id": entity.id,
+                "name": entity.name,
+                "entity_type": entity.entity_type.value if isinstance(entity.entity_type, EntityType) else str(entity.entity_type),
+                "details": entity_dict,
+            })
+
+        edges = []
+        for rel in self.get_all_relationships():
+            edges.append({
+                "id": rel.id,
+                "source_id": rel.source_id,
+                "source_type": rel.source_type.value if isinstance(rel.source_type, EntityType) else str(rel.source_type),
+                "target_id": rel.target_id,
+                "target_type": rel.target_type.value if isinstance(rel.target_type, EntityType) else str(rel.target_type),
+                "relation_type": rel.relation_type.value if hasattr(rel.relation_type, "value") else str(rel.relation_type),
+            })
+
+        return {
+            "nodes": nodes,
+            "edges": edges,
+        }
+
+    def export_relationships_markdown(self, filepath: Optional[str] = None) -> str:
+        """Exporta os relacionamentos em formato Markdown para um arquivo em disco,
+
+        agrupados por categorias de entidade (Personagens, Facções, Locais) e ordenados alfabeticamente.
+        Retorna o caminho do arquivo exportado.
+        """
+        if filepath is None:
+            filepath = os.path.join(self.root_dir, "exports", "relationships.md")
+
+        lines = ["# Relacionamentos do Mundo", ""]
+
+        # Agrupar e ordenar entidades alfabeticamente por tipo
+        characters = sorted(self.character_repo.get_all(), key=lambda x: x.name.lower())
+        factions = sorted(self.faction_repo.get_all(), key=lambda x: x.name.lower())
+        locations = sorted(self.location_repo.get_all(), key=lambda x: x.name.lower())
+
+        groups = [
+            ("Personagens", characters),
+            ("Facções", factions),
+            ("Locais", locations),
+        ]
+
+        for group_title, entities in groups:
+            lines.append(f"## {group_title}")
+            lines.append("")
+            if not entities:
+                lines.append("*Nenhuma entidade cadastrada.*")
+                lines.append("")
+                continue
+
+            has_relationships = False
+            for entity in entities:
+                rels = self.get_relationships_for_entity(entity.id)
+                if not rels:
+                    continue
+
+                has_relationships = True
+                lines.append(f"- **{entity.name}**")
+
+                # Ordenar relacionamentos pelo nome da outra entidade
+                rel_items = []
+                for rel in rels:
+                    if rel.source_id == entity.id:
+                        other = self.get_entity(rel.target_id)
+                        other_name = other.name if other else rel.target_id
+                        other_type = (
+                            other.entity_type.value
+                            if (other and hasattr(other.entity_type, "value"))
+                            else "desconhecido"
+                        )
+                        rel_str = f"  - {rel.relation_type} -> **{other_name}** ({other_type})"
+                    else:
+                        other = self.get_entity(rel.source_id)
+                        other_name = other.name if other else rel.source_id
+                        other_type = (
+                            other.entity_type.value
+                            if (other and hasattr(other.entity_type, "value"))
+                            else "desconhecido"
+                        )
+                        rel_str = f"  - **{other_name}** ({other_type}) -> {rel.relation_type}"
+                    rel_items.append((other_name.lower(), rel_str))
+
+                rel_items.sort(key=lambda x: x[0])
+                for _, rel_line in rel_items:
+                    lines.append(rel_line)
+
+            if not has_relationships:
+                lines.append("*Nenhum relacionamento encontrado nesta categoria.*")
+            lines.append("")
+
+        content = "\n".join(lines)
+        os.makedirs(os.path.dirname(os.path.abspath(filepath)), exist_ok=True)
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        return filepath
+
     def _enforce_referential_integrity(self, deleted_entity_id: str) -> None:
         """Garante a eliminação de relacionamentos e referências órfãs."""
         # 1. Eliminar relacionamentos associados
